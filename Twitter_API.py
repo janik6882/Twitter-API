@@ -1,6 +1,6 @@
 import requests
 import json
-
+import time
 class Wrapper(object):
     """docstring for Wrapper."""
 
@@ -67,8 +67,41 @@ class Wrapper(object):
         headers = self.headers
         r = requests.get(url, params=params, headers=headers)
         return json.loads(r.content)
-    def get_statusses(self, arg):
-        pass
+    def get_statuses(self, username, max_id=None, num=None):
+        """
+        Comment: function to get statusses of a person
+        Input: Name of Instance, username
+        Output: Result as Json object
+        Special: Nothing Special
+        """
+        url = self.base + "statuses/user_timeline.json"
+        params = {"screen_name": username, "max_id": max_id, "count" : num}
+        headers = self.headers
+        r = requests.get(url, params=params, headers=headers)
+        return json.loads(r.content)
+
+    def get_x_statuses(self, username, int_num):
+        """
+        Comment: gets a certain number of statusses for a twitter profile by it's username
+        Input: Name of Instance, Username, Number of Tweets wanted
+        Output: Number of Tweets as Json
+        Special: Will requests tweets as long as int_num is not passed
+        """
+        res = []
+        x = self.get_statuses(username, num=200)
+        res = res + x
+        last_id = x[-1]["id"]
+        print last_id
+        time.sleep(2)
+        while len(res)<int_num:
+            x = self.get_statuses(username, num=200, max_id=last_id)
+            res = res + x
+            last_id = x[-1]["id"]
+            print last_id
+            time.sleep(2)
+        print last_id
+        print len(res)
+        return res
 
 
 def main():
@@ -76,8 +109,8 @@ def main():
     berlin_woeid = 638242
     parent_id = 23424829
     test = Wrapper(tokens["key"], tokens["secret_key"], tokens["access"], tokens["acces_secret"], tokens["bearer"])
-    res = test.get_user_info("RealDonaldTrump")
-    print res
+    res = test.get_x_statuses("realDonaldTrump", 500)
+    #print res
     json.dump(res, open("out.json", "w"))
 if __name__ == '__main__':
     main()
